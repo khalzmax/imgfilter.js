@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    
+    <!-- Latest compiled and minified CSS -->
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"> -->
+    <!-- Latest compiled and minified JavaScript -->
+    <!-- <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script> -->
+    <script src="js/Filter.js" type="text/javascript"></script>
+    <script src="js/gblur.js" type="text/javascript"></script>
+    
+    <script src="js/lib/filter.js" type="text/javascript"></script>
+    <script src="js/lib/timer.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="578" height="400"></canvas>
+    <p>
+      <input type="button" value="do magic" onclick="doMagic()">
+      <input type="button" value="Negative" onclick="doNegative()">
+      <input type="button" value="Gauss blur" onclick="doGBlur()">
+    </p>
+    <script>
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+      var img = new Image();
+      var pixels;
+
+      img.onload = function() {
+        context.drawImage(img, 0, 0);
+        pixels = context.getImageData(0,0,img.width,img.height);
+        console.log(pixels);
+      };
+      img.src = 'img/darth-vader.jpg';
+
+      function doMagic() {
+          var canvas = document.getElementById('myCanvas'),
+            context = canvas.getContext('2d'),
+            pixels = context.getImageData(0,0,img.width,img.height);
+          for (var i = 0; i < pixels.data.length; i += 4) {
+          pixels.data[i+0] = 255 - pixels.data[i+0];
+          pixels.data[i+1] = 255 - pixels.data[i+2];
+          pixels.data[i+2] = 255 - pixels.data[i+1];
+        }
+        context.putImageData(pixels, 0, 0);
+      }
+
+      function doNegative(){
+        var canvas = document.getElementById('myCanvas'),
+            context = canvas.getContext('2d'),
+            pixels = context.getImageData(0,0,img.width,img.height),
+            newPixels = context.createImageData(img.width,img.height);
+        var time = new Date().getTime();
+        /* define matrix`
+         * [ [0  [0  [0
+         *    0   -1  0
+         *    0], 0], 0] ]
+         */
+        var matrix = [[0,0,0],[0,-1,0],[0,0,0]];
+
+        var filter1 = new Filter({matrix:matrix, offset:256});
+        filter1.apply(pixels, newPixels);
+        //context.clearRect(0, 0, canvas.width, canvas.height);
+        context.putImageData(newPixels, 0, 0);
+
+        console.log('filter applied! '+ (new Date().getTime() - time) + ' ms.');
+      }
+
+      function doGBlur() {
+        var canvas = document.getElementById('myCanvas'),
+            context = canvas.getContext('2d'),
+            pixels = context.getImageData(0,0,img.width,img.height);
+        var timer = new Timer();
+
+        timer.start();
+
+        var filter = new GBlur(10);
+        filter.apply(pixels);
+
+        context.putImageData(pixels, 0, 0);
+
+        console.log('filter applied! '+ (timer.stop()) + ' ms.');
+
+      }
+    </script>
+
+  </body>
+</html>
